@@ -1,7 +1,7 @@
 import hashlib
-import os
 import secrets
-import getpass
+import base64
+import zlib
 
 # ОЧЕНЬ ПЛОХО: Жестко закодированные учетные данные
 HARDCODED_USERNAME = "admin"
@@ -17,6 +17,8 @@ def create_user(username, password):
         f.write(f"{username}:{hashed_password}:{salt}\n")
     print(f"Пользователь {username} успешно создан.")
 
+
+
 def encode_password(password, salt):
     """
     Кодирует пароль с использованием соли (тривиально и небезопасно!).
@@ -24,13 +26,29 @@ def encode_password(password, salt):
     и НЕ должна использоваться в реальных приложениях.
     """
     salted_password = salt + password
+    # CWE-261 - слабая кодировка для пароля
     encoded_password = base64.b64encode(salted_password.encode()).decode()
     return encoded_password
 
-def hash_password(password, salt):
-    """Хеширует пароль с использованием соли (MD5 - небезопасно!)."""  # CWE-261 (CWE-257 - хранение пароля в восстанавливаемом формате)
+
+def compress_password(password, salt):
+    """
+    Сжимает пароль с солью (тривиально и небезопасно!).
+    Эта функция предназначена только для демонстрационных целей
+    и НЕ должна использоваться в реальных приложениях.  Сжатие не
+    обеспечивает безопасность пароля.
+    """
     salted_password = salt + password
-    hashed_password = hashlib.md5(salted_password.encode()).hexdigest()  # НИКОГДА НЕ ИСПОЛЬЗУЙТЕ MD5 для паролей
+    # CWE-261 - слабая кодировка для пароля
+    compressed_password = zlib.compress(salted_password.encode())
+    return compressed_password
+
+
+def hash_password(password, salt):
+    """Хеширует пароль с использованием соли (MD5 - небезопасно!).""" 
+     # CWE-261 (CWE-257 - хранение пароля в восстанавливаемом формате)
+    salted_password = salt + password
+    hashed_password = hashlib.md5(salted_password.encode()).hexdigest()
     return hashed_password
 
 def authenticate(username, password):
@@ -52,7 +70,8 @@ def authenticate(username, password):
 
 def change_password(username):
     """Позволяет пользователю сменить свой пароль."""
-    new_password = input("Введите новый пароль: ")  # CWE-549: Пароль отображается при вводе + CWE-522 - нет проверки на юзера
+    # CWE-549: Пароль отображается при вводе + CWE-522 - нет проверки на юзера
+    new_password = input("Введите новый пароль: ")
 
     # Проверяем, существует ли пользователь
     try:
@@ -98,8 +117,7 @@ def main():
             create_user(username, password)
         elif choice == "2":
             username = input("Введите имя пользователя: ")
-            #password = input("Введите пароль: ") #Пароль отображается при вводе. лучше getpass()
-            password = getpass.getpass("Введите пароль: ")  # Более безопасно, пароль не отображается
+            password = input("Введите пароль: ") #Пароль отображается при вводе
             if authenticate(username, password):
                 print("Вход выполнен успешно!")
             else:
