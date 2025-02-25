@@ -17,6 +17,16 @@ def create_user(username, password):
         f.write(f"{username}:{hashed_password}:{salt}\n")
     print(f"Пользователь {username} успешно создан.")
 
+def encode_password(password, salt):
+    """
+    Кодирует пароль с использованием соли (тривиально и небезопасно!).
+    Эта функция предназначена только для демонстрационных целей
+    и НЕ должна использоваться в реальных приложениях.
+    """
+    salted_password = salt + password
+    encoded_password = base64.b64encode(salted_password.encode()).decode()
+    return encoded_password
+
 def hash_password(password, salt):
     """Хеширует пароль с использованием соли (MD5 - небезопасно!)."""  # CWE-261 (CWE-257 - хранение пароля в восстанавливаемом формате)
     salted_password = salt + password
